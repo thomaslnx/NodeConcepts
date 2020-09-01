@@ -20,10 +20,10 @@ app.post("/repositories", (request, response) => {
     title,
     url,
     techs,
-    likes
   } = request.body;
   
   const id = uuid();
+  const likes = 0;
 
   if (!isUuid(id)) {
     return response.status(400).json({
