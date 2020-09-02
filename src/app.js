@@ -12,7 +12,24 @@ app.use(cors());
 const repositories = [];
 
 app.get("/repositories", (request, response) => {
-  return response.json(repositories);
+  let result = [];
+  
+  const repos = repositories.map(repo => {
+      const final = {
+        id: repo.id,
+        title: repo.title,
+        url: repo.url,
+        techs: repo.techs,
+        likes: repo.likes
+      } 
+
+      result.push(final);
+    } 
+    
+    );
+
+    return response.json(result);
+  
 });
 
 app.post("/repositories", (request, response) => {
@@ -48,42 +65,58 @@ app.put("/repositories/:id", (request, response) => {
   const { id } = request.params;
   const { title, url, techs } = request.body;
 
-  const repoId = repositories.map( repo => {
-    if (repo.id === id) {
-      repo.title = title;
-      repo.url = url;
-      repo.techs = techs;
-    } else {
-      return response.status(400).json({
-        error: 'Id is invalid!',
-      })
-    }
+  const repoIndex = repositories.findIndex(repo => repo.id === id);
 
-    repositories[repo.id] = repo;
+  if (repoIndex === -1) {
+    return response.status(400).json({
+      error: 'This ID not exists'
+    })
+  }
 
-    return response.json(repo);
-  });
+  const repository = {
+    id,
+    title,
+    url,
+    techs,
+    likes: repositories[repoIndex].likes
+  }
+
+  return response.json(repository);
+
 });
 
 app.delete("/repositories/:id", (request, response) => {
   const { id } = request.params;
 
   const repoIndex = repositories.findIndex(repo => repo.id === id);
+  
+  if (repoIndex === -1) {
+    return response.status(400).json({
+      error: 'Bad Request'
+    })
+  } else {
+    repositories.splice(repoIndex, 1);
+  }
 
-  repositories.splice(repoIndex, 1);
-
-  return response.json(repositories);
+  return response.status(204).json({});
 });
 
 app.post("/repositories/:id/like", (request, response) => {
   const { id } = request.params;
 
   const reposIndex = repositories.findIndex( repo => repo.id === id );
+
+  if (reposIndex === -1) {
+    return response.status(400).json({
+      error: 'Bad Request'
+    })
+  }
+
   const likes = repositories[reposIndex].likes;
 
   repositories[reposIndex].likes = likes + 1;
   
-  return response.json(repositories);
+  return response.json({likes: repositories[reposIndex].likes});
 });
 
 module.exports = app;
